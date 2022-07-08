@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type PostBody struct {
@@ -32,6 +32,10 @@ type Database struct {
 
 var dataBase Database
 
+func init() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+}
+
 func main() {
 	r := mux.NewRouter()
 	// r.HandleFunc("/", frontpage)
@@ -41,19 +45,20 @@ func main() {
 	r.HandleFunc("/ListItem", listItem).Methods("GET")
 	r.HandleFunc("/GetItemByID", getItemByID).Methods("GET")
 
-	fmt.Println("Server Starting...")
-
+	// fmt.Println("Server Starting...")
+	log.Info().Msg("Server Starting...")
 	http.ListenAndServe(":8080", r)
 }
 
 func addItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
 	}
 	var data Merchandise
 	json.Unmarshal([]byte(body), &data)
 	dataBase.Item = append(dataBase.Item, data)
+	log.Info().Msg("Item added to database.")
 
 	var reply PostBody
 	reply.Message = "Item Added..."
@@ -65,7 +70,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 func editItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
 	}
 	var data Merchandise
 	json.Unmarshal([]byte(body), &data)
@@ -106,6 +111,7 @@ func editItem(w http.ResponseWriter, r *http.Request) {
 		replacement.Price = dataBase.Item[updBlock].Price
 	}
 	dataBase.Item[updBlock] = replacement
+	log.Info().Msg("Item " + dataBase.Item[updBlock].ID + " was edited.")
 
 	var reply PostBody
 	reply.Message = "Item Updated..."
@@ -117,7 +123,7 @@ func editItem(w http.ResponseWriter, r *http.Request) {
 func removeItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
 	}
 	var itemID ID
 	json.Unmarshal([]byte(body), &itemID)
@@ -134,6 +140,8 @@ func removeItem(w http.ResponseWriter, r *http.Request) {
 
 	dataBase = placeholder
 
+	log.Info().Msg("Item " + itemID.ID + " was deleted.")
+
 	var reply PostBody
 	reply.Message = "Item Removed..."
 	json, _ := json.Marshal(reply)
@@ -145,12 +153,13 @@ func listItem(w http.ResponseWriter, r *http.Request) {
 	json, _ := json.Marshal(dataBase.Item)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
+	log.Info().Msg("Item list requested.")
 }
 
 func getItemByID(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
 	}
 
 	var data ID
@@ -161,6 +170,7 @@ func getItemByID(w http.ResponseWriter, r *http.Request) {
 			json, _ := json.Marshal(v)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(json)
+			log.Info().Msg("Item info requested.")
 			break
 		}
 	}
