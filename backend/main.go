@@ -58,7 +58,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 	var data Merchandise
 	json.Unmarshal([]byte(body), &data)
 	dataBase.Item = append(dataBase.Item, data)
-	log.Info().Msg("Item added to database.")
+	log.Info().Msg("Item " + data.ID + " added to database.")
 
 	var reply PostBody
 	reply.Message = "Item Added..."
