@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
@@ -30,7 +31,9 @@ type Database struct {
 	Item []Merchandise
 }
 
-var dataBase Database
+var (
+	dataBase Database
+)
 
 func init() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -45,20 +48,27 @@ func main() {
 	r.HandleFunc("/ListItem", listItem).Methods("GET")
 	r.HandleFunc("/GetItemByID", getItemByID).Methods("GET")
 
-	// fmt.Println("Server Starting...")
 	log.Info().Msg("Server Starting...")
 	http.ListenAndServe(":8080", r)
+}
+
+func GetHostName() string {
+	name, err := os.Hostname()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to retrieve MachineHost Name.")
+	}
+	return name
 }
 
 func addItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
+		log.Error().Err(err).Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Request Error.")
 	}
 	var data Merchandise
 	json.Unmarshal([]byte(body), &data)
 	dataBase.Item = append(dataBase.Item, data)
-	log.Info().Msg("Item " + data.ID + " added to database.")
+	log.Info().Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Item " + data.ID + " added to database.")
 
 	var reply PostBody
 	reply.Message = "Item Added..."
@@ -70,7 +80,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 func editItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
+		log.Error().Err(err).Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Request Error.")
 	}
 	var data Merchandise
 	json.Unmarshal([]byte(body), &data)
@@ -111,7 +121,7 @@ func editItem(w http.ResponseWriter, r *http.Request) {
 		replacement.Price = dataBase.Item[updBlock].Price
 	}
 	dataBase.Item[updBlock] = replacement
-	log.Info().Msg("Item " + dataBase.Item[updBlock].ID + " was edited.")
+	log.Info().Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Item " + dataBase.Item[updBlock].ID + " was edited.")
 
 	var reply PostBody
 	reply.Message = "Item Updated..."
@@ -123,7 +133,7 @@ func editItem(w http.ResponseWriter, r *http.Request) {
 func removeItem(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
+		log.Error().Err(err).Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Request Error.")
 	}
 	var itemID ID
 	json.Unmarshal([]byte(body), &itemID)
@@ -140,7 +150,7 @@ func removeItem(w http.ResponseWriter, r *http.Request) {
 
 	dataBase = placeholder
 
-	log.Info().Msg("Item " + itemID.ID + " was deleted.")
+	log.Info().Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Item " + itemID.ID + " was deleted.")
 
 	var reply PostBody
 	reply.Message = "Item Removed..."
@@ -153,13 +163,13 @@ func listItem(w http.ResponseWriter, r *http.Request) {
 	json, _ := json.Marshal(dataBase.Item)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
-	log.Info().Msg("Item list requested.")
+	log.Info().Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Item list requested.")
 }
 
 func getItemByID(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("Request Error. " + r.RequestURI)
+		log.Error().Err(err).Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Request Error. " + r.RequestURI)
 	}
 
 	var data ID
@@ -170,7 +180,7 @@ func getItemByID(w http.ResponseWriter, r *http.Request) {
 			json, _ := json.Marshal(v)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(json)
-			log.Info().Msg("Item info requested.")
+			log.Info().Str("Machine", GetHostName()).Str("Route", r.RequestURI).Msg("Item info requested.")
 			break
 		}
 	}

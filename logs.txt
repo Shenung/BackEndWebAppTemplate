@@ -1,0 +1,9 @@
+INFO: 2022/07/06 13:51:09 main.go:63: Starting the application...
+INFO: 2022/07/06 13:51:09 main.go:64: Something noteworthy happened
+WARNING: 2022/07/06 13:51:09 main.go:65: There is something you should know about
+ERROR: 2022/07/06 13:51:09 main.go:66: Something went wrong
+INFO: 2022/07/06 13:57:07 main.go:65: Starting the application...
+INFO: 2022/07/06 13:57:07 main.go:66: Something noteworthy happened
+WARNING: 2022/07/06 13:57:07 main.go:67: There is something you should know about
+ERROR: 2022/07/06 13:57:07 main.go:68: Something went wrong
+INFO: 2022/07/06 13:57:13 main.go:102: {/AddItem POST PostmanRuntime/7.29.0}
